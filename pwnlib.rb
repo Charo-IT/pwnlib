@@ -8,7 +8,7 @@ class OpenSSL::PKey::RSA
             raise "p or q is empty"
         end
         if self.e == 0
-            raose "e is empty"
+            raise "e is empty"
         end
 
         self.n = self.p * self.q
