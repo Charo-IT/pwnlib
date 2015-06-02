@@ -12,7 +12,7 @@ class OpenSSL::PKey::RSA
         end
 
         self.n = self.p * self.q
-        self.d = self.e.mod_inverse((self.p- 1) * (self.q - 1))
+        self.d = self.e.mod_inverse((self.p - 1) * (self.q - 1))
         self.dmp1 = self.d % (self.p - 1)
         self.dmq1 = self.d % (self.q - 1)
         self.iqmp = self.q.mod_inverse(self.p)
@@ -34,10 +34,11 @@ class PwnLib
 end
 
 class PwnTube
-    attr_accessor :socket, :wait_time
+    attr_accessor :socket, :wait_time, :debug
 
     def initialize(host, port, &block)
         @wait_time = 0.1
+        @debug = false
         @socket = TCPSocket.open(host, port)
         puts "[*] connected"
 
@@ -60,11 +61,12 @@ class PwnTube
 
     def send(msg)
         @socket.send(msg, 0)
+        puts "<< #{msg.inspect}" if @debug
         sleep(@wait_time)
     end
 
     def recv(size = 8192)
-        @socket.recv(size)
+        @socket.recv(size).tap{|a| puts ">> #{a.inspect}" if @debug}
     end
 
     def recv_until(pattern)
@@ -88,8 +90,9 @@ class PwnTube
     def interactive(shellmode = true)
 
         if shellmode
-            send("echo HACKED\n")
-            recv_until("HACKED\n")
+            puts "[*] waiting for shell..."
+            self.send("echo HACKED\n")
+            self.recv_until("HACKED\n")
         end
 
         send_thread = Thread.new(self){|tube|
