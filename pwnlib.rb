@@ -36,9 +36,14 @@ end
 class PwnTube
     attr_accessor :socket, :wait_time, :debug
 
-    def initialize(host, port, &block)
+    def initialize(host = nil, port = nil, &block)
         @wait_time = 0.1
         @debug = false
+
+        if !host || !port
+            return self
+        end
+
         @socket = TCPSocket.open(host, port)
         puts "[*] connected"
 
@@ -50,8 +55,8 @@ class PwnTube
         return nil
     end
 
-    def PwnTube.open(host, port, &block)
-        PwnTube.new(host, port, &block)
+    def self.open(host = nil, port = nil, &block)
+        self.new(host, port, &block)
     end
 
     def close
@@ -87,25 +92,25 @@ class PwnTube
         recv_until(pattern).match(pattern).captures
     end
 
-    def interactive(shellmode = true)
-
-        if shellmode
-            puts "[*] waiting for shell..."
-            self.send("echo HACKED\n")
-            self.recv_until("HACKED\n")
-        end
+    def interactive(terminate_string = nil)
+        end_flag = false
 
         send_thread = Thread.new(self){|tube|
             begin
                 while true
-                    tube.socket.send(gets.chomp + "\n", 0)
+                    s = gets
+                    if !s || s.chomp == terminate_string
+                        break
+                    end
+                    tube.socket.send(s.chomp + "\n", 0)
                 end
             rescue
             end
+            end_flag = true
         }
         recv_thread = Thread.new(self){|tube|
             begin
-                while true
+                while !end_flag
                     if IO.select([tube.socket], [], [], 0.05) != nil
                         buf = tube.socket.recv(8192)
                         if buf == ""
@@ -119,6 +124,7 @@ class PwnTube
                 puts "[!] #{e}"
             end
             send_thread.kill
+            end_flag = true
         }
 
         puts "[*] interactive mode"
@@ -127,5 +133,12 @@ class PwnTube
         [send_thread, recv_thread].each{|t| t.join}
         puts "[*] end interactive mode"
         $>.flush
+    end
+
+    def shell
+        puts "[*] waiting for shell..."
+        self.send("echo HACKED\n")
+        self.recv_until("HACKED\n")
+        self.interactive
     end
 end
