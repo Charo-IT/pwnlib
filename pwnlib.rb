@@ -51,7 +51,7 @@ class PwnTube
         instance.log "[*] connected"
 
         if block == nil
-            return self
+            return instance
         end
         begin
             block.call(instance)
