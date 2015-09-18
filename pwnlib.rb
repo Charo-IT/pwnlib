@@ -34,44 +34,49 @@ class PwnLib
 end
 
 class PwnTube
-    attr_accessor :socket, :wait_time, :debug
+    attr_accessor :socket, :wait_time, :debug, :log_output
 
-    def initialize(host = nil, port = nil, &block)
+    def initialize(socket, log_output = $>)
         @wait_time = 0.1
         @debug = false
+        @socket = socket
+        @log_output = log_output
 
-        if !host || !port
-            return self
-        end
+        self
+    end
 
-        @socket = TCPSocket.open(host, port)
-        puts "[*] connected"
+    def self.open(host, port, log_output = $>, &block)
+        socket = TCPSocket.open(host, port)
+        instance = self.new(socket, log_output)
+        instance.log "[*] connected"
 
         if block == nil
             return self
         end
-        block.call(self)
-        self.close
+        begin
+            block.call(instance)
+        ensure
+            begin
+                instance.close
+            rescue
+            end
+        end
         return nil
-    end
-
-    def self.open(host = nil, port = nil, &block)
-        self.new(host, port, &block)
     end
 
     def close
         @socket.close
-        puts "[*] connection closed"
+        log "[*] connection closed"
     end
 
     def send(msg)
         @socket.send(msg, 0)
-        puts "<< #{msg.inspect}" if @debug
+        log "<< #{msg.inspect}" if @debug
         sleep(@wait_time)
     end
 
     def recv(size = 8192)
-        @socket.recv(size).tap{|a| puts ">> #{a.inspect}" if @debug}
+        @socket.recv(size).tap{|a| log ">> #{a.inspect}" if @debug}
     end
 
     def recv_until(pattern)
@@ -116,29 +121,33 @@ class PwnTube
                         if buf == ""
                             break
                         end
-                        print buf
+                        $>.print buf
                         $>.flush
                     end
                 end
             rescue => e
-                puts "[!] #{e}"
+                $>.puts "[!] #{e}"
             end
             send_thread.kill
             end_flag = true
         }
 
-        puts "[*] interactive mode"
-        $>.flush
-        
+        $>.puts "[*] interactive mode"
+
         [send_thread, recv_thread].each{|t| t.join}
-        puts "[*] end interactive mode"
-        $>.flush
+        $>.puts "[*] end interactive mode"
     end
 
     def shell
-        puts "[*] waiting for shell..."
-        self.send("echo HACKED\n")
-        self.recv_until("HACKED\n")
+        $>.puts "[*] waiting for shell..."
+        self.send("echo PWNED\n")
+        self.recv_until("PWNED\n")
         self.interactive
+    end
+
+    def log(*args)
+        if @log_output
+            @log_output.puts *args
+        end
     end
 end
