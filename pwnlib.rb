@@ -71,6 +71,7 @@ class PwnTube
 
     def send(msg)
         @socket.send(msg, 0)
+        @socket.flush
         log "<< #{msg.inspect}" if @debug
         sleep(@wait_time)
     end
