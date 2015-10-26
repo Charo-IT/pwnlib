@@ -33,11 +33,14 @@ class PwnLib
     end
 end
 
+class TimeoutError < IOError
+end
+
 class PwnTube
     attr_accessor :socket, :wait_time, :debug, :log_output
 
     def initialize(socket, log_output = $>)
-        @wait_time = 0.1
+        @wait_time = 0
         @debug = false
         @socket = socket
         @log_output = log_output
@@ -76,26 +79,41 @@ class PwnTube
         sleep(@wait_time)
     end
 
-    def recv(size = 8192)
+    def recv(size = 8192, timeout = nil)
+        if IO.select([@socket], [], [], timeout) == nil
+            raise TimeoutError.new
+        end
         @socket.recv(size).tap{|a| log ">> #{a.inspect}" if @debug}
     end
 
-    def recv_until(pattern)
+    def recv_until(pattern, timeout = nil)
         s = ""
         if !pattern.is_a?(String) && !pattern.is_a?(Regexp)
-            raise "type error"
+            raise ArgumentError.new("type error")
         end
         while true
             if pattern.is_a?(String) && s.include?(pattern) || pattern.is_a?(Regexp) && s =~ pattern
                 break
             end
-            s << recv(1)
+            if (c = recv(1, timeout)) && c.length > 0
+                s << c
+            else
+                raise EOFError.new
+            end
         end
         return s
     end
 
-    def recv_capture(pattern)
-        recv_until(pattern).match(pattern).captures
+    def recv_until_eof(timeout = nil)
+        s = ""
+        while (c = recv(1), timeout) && c.length > 0
+            s << c
+        end
+        return s
+    end
+
+    def recv_capture(pattern, timeout = nil)
+        recv_until(pattern, timeout).match(pattern).captures
     end
 
     def interactive(terminate_string = nil)
@@ -141,6 +159,7 @@ class PwnTube
 
     def shell
         $>.puts "[*] waiting for shell..."
+        sleep(0.1)
         self.send("echo PWNED\n")
         self.recv_until("PWNED\n")
         self.interactive
