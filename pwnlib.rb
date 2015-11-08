@@ -98,6 +98,7 @@ class PwnTube
             if (c = recv(1, timeout)) && c.length > 0
                 s << c
             else
+                log s.inspect
                 raise EOFError.new
             end
         end
