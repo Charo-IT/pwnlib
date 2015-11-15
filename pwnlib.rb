@@ -107,7 +107,7 @@ class PwnTube
 
     def recv_until_eof(timeout = nil)
         s = ""
-        while (c = recv(1), timeout) && c.length > 0
+        while (c = recv(1, timeout)) && c.length > 0
             s << c
         end
         return s
