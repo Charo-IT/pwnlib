@@ -128,11 +128,11 @@ class PwnTube
         send_thread = Thread.new(self){|tube|
             begin
                 while true
-                    s = gets
+                    s = $stdin.gets
                     if !s || s.chomp == terminate_string
                         break
                     end
-                    tube.socket.send(s.chomp + "\n", 0)
+                    tube.socket.send(s, 0)
                 end
             rescue
             end
