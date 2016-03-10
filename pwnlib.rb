@@ -84,6 +84,10 @@ class PwnTube
         sleep(@wait_time)
     end
 
+    def sendline(msg)
+        self.send(msg + "\n")
+    end
+
     def recv(size = 8192, timeout = nil)
         if IO.select([@socket], [], [], timeout) == nil
             raise PwnLib::TimeoutError.new
