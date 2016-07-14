@@ -107,7 +107,7 @@ class PwnTube
         sleep(@wait_time)
     end
 
-    def sendline(msg)
+    def sendline(msg = "")
         self.send(msg + "\n")
     end
 
