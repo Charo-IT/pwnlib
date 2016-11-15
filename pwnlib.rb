@@ -6,6 +6,14 @@ class String
     def rot13
         self.tr("A-Za-z", "N-ZA-Mn-za-m")
     end
+
+    def scanf_safe?
+        self !~ /[\x09\x0a\x0b\x0c\x0d\x20]/
+    end
+
+    def tty_safe?
+        self !~ /[\x03\x04\x0a\x0d\x11\x12\x13\x15\x16\x17\x1a\x1c\x7f]/
+    end
 end
 
 class OpenSSL::PKey::RSA
