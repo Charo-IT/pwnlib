@@ -4,7 +4,15 @@ require "openssl"
 
 class String
   def rot13
-    self.tr("A-Za-z", "N-ZA-Mn-za-m")
+    rot_n(13)
+  end
+
+  def rot_n(n)
+    alphabet = ("a".."z").to_a
+    self.gsub(/[a-zA-Z]/){|a|
+      c = alphabet[(alphabet.index(a.downcase) + n) % alphabet.length]
+      a =~ /[a-z]/ ? c : c.upcase
+    }
   end
 
   def scanf_safe?
