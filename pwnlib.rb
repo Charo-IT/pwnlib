@@ -22,6 +22,10 @@ class String
   def tty_safe?
     self !~ /[\x03\x04\x0a\x0d\x11\x12\x13\x15\x16\x17\x1a\x1c\x7f]/
   end
+
+  def escape_tty
+    self.gsub(/[\x03\x04\x0a\x0d\x11\x12\x13\x15\x16\x17\x1a\x1c\x7f]/){|c| "\x16" + c}
+  end
 end
 
 class OpenSSL::PKey::RSA
@@ -122,7 +126,7 @@ class PwnTube
   end
 
   def send(msg)
-    @socket.send(@tty ? (msg.chars.map{|c| "\x16#{c}"}.join + "\x04") : msg, 0)
+    @socket.send(@tty ? (msg.escape_tty + "\x04") : msg, 0)
     @socket.flush
     log "<< #{msg.inspect}" if @debug
     sleep(@wait_time)
