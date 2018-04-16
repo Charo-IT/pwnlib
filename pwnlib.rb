@@ -122,8 +122,7 @@ class PwnTube
   end
 
   def send(msg)
-    msg = msg.chars.map{|c| "\x16#{c}"}.join + "\x04" if @tty
-    @socket.send(msg, 0)
+    @socket.send(@tty ? (msg.chars.map{|c| "\x16#{c}"}.join + "\x04") : msg, 0)
     @socket.flush
     log "<< #{msg.inspect}" if @debug
     sleep(@wait_time)
