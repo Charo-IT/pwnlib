@@ -92,6 +92,7 @@ class PwnTube
     @debug = false
     @socket = socket
     @log_output = log_output
+    @tty = false
 
     self
   end
@@ -121,6 +122,7 @@ class PwnTube
   end
 
   def send(msg)
+    msg = msg.chars.map{|c| "\x16#{c}"}.join + "\x04" if @tty
     @socket.send(msg, 0)
     @socket.flush
     log "<< #{msg.inspect}" if @debug
@@ -164,6 +166,14 @@ class PwnTube
 
   def recv_capture(pattern, timeout = nil)
     recv_until(pattern, timeout).match(pattern).captures
+  end
+
+  def tty?
+    @tty
+  end
+
+  def tty=(v)
+    @tty = v
   end
 
   def interactive(terminate_string = nil)
