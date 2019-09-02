@@ -159,6 +159,14 @@ class PwnTube
     s
   end
 
+  def recv_exact(size = 8192, timeout = nil)
+    s = ""
+    while s.length < size
+      s << recv(size - s.length, timeout)
+    end
+    s
+  end
+
   def recv_until_eof(timeout = nil)
     s = ""
     while (c = recv(1, timeout)) && c.length > 0
