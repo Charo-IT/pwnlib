@@ -190,6 +190,8 @@ class PwnTube
   def interactive(terminate_string = nil)
     end_flag = false
 
+    $>.puts "[*] interactive mode"
+
     send_thread = Thread.new(self) do |tube|
       begin
         while true
@@ -219,8 +221,6 @@ class PwnTube
       send_thread.kill
       end_flag = true
     end
-
-    $>.puts "[*] interactive mode"
 
     [send_thread, recv_thread].each(&:join)
     $>.puts "[*] end interactive mode"
